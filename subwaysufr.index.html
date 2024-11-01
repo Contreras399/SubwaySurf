@@ -1,0 +1,104 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = 400;
+canvas.height = 600;
+
+// Configuración inicial del personaje
+const player = {
+    x: 180,
+    y: 500,
+    width: 30,
+    height: 30,
+    speed: 5
+};
+
+// Configuración de obstáculos
+const obstacles = [];
+let obstacleTimer = 0;
+const obstacleInterval = 120;
+
+// Variables de juego
+let isGameOver = false;
+let score = 0;
+
+// Función para dibujar el personaje
+function drawPlayer() {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+// Función para crear obstáculos
+function createObstacle() {
+    const size = Math.random() * 50 + 20;
+    const x = Math.random() * (canvas.width - size);
+    obstacles.push({ x, y: -size, width: size, height: size, speed: 3 });
+}
+
+// Función para dibujar obstáculos
+function drawObstacles() {
+    ctx.fillStyle = 'red';
+    obstacles.forEach(obstacle => {
+        obstacle.y += obstacle.speed;
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    });
+}
+
+// Función para detectar colisiones
+function checkCollision() {
+    obstacles.forEach(obstacle => {
+        if (
+            player.x < obstacle.x + obstacle.width &&
+            player.x + player.width > obstacle.x &&
+            player.y < obstacle.y + obstacle.height &&
+            player.y + player.height > obstacle.y
+        ) {
+            isGameOver = true;
+        }
+    });
+}
+
+// Función de actualización de juego
+function updateGame() {
+    if (isGameOver) {
+        alert('Game Over! Puntaje: ' + score);
+        document.location.reload();
+        return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPlayer();
+    drawObstacles();
+    checkCollision();
+
+    // Actualizar el marcador
+    score++;
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.fillText('Puntaje: ' + score, 10, 30);
+
+    // Generar obstáculos cada cierto tiempo
+    if (obstacleTimer++ > obstacleInterval) {
+        createObstacle();
+        obstacleTimer = 0;
+    }
+
+    // Eliminar obstáculos que salen de la pantalla
+    obstacles.forEach((obstacle, index) => {
+        if (obstacle.y > canvas.height) obstacles.splice(index, 1);
+    });
+
+    requestAnimationFrame(updateGame);
+}
+
+// Control del movimiento del jugador
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' && player.x > 0) {
+        player.x -= player.speed;
+    } else if (e.key === 'ArrowRight' && player.x + player.width < canvas.width) {
+        player.x += player.speed;
+    }
+});
+
+// Iniciar el juego
+updateGame();
